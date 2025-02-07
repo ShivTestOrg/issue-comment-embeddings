@@ -39,7 +39,6 @@ export async function issueMatching(context: Context<"issues.opened" | "issues.e
   } = context;
   const issue = payload.issue;
   const issueContent = issue.body + issue.title;
-  const commentStart = ">The following contributors may be suitable for this task:";
   const matchResultArray: Map<string, Array<string>> = new Map();
 
   // If alwaysRecommend is enabled, use a lower threshold to ensure we get enough recommendations
@@ -126,8 +125,10 @@ export async function issueMatching(context: Context<"issues.opened" | "issues.e
       repo: payload.repository.name,
       issue_number: issue.number,
     });
-    //Check if the comment already exists
-    const existingComment = listIssues.data.find((comment) => comment.body && comment.body.includes(">[!NOTE]" + "\n" + commentStart));
+
+    // Use a unique identifier in HTML comment to prevent double posting
+    const commentIdentifier = `<!--issue-matching-${payload.issue.node_id}-->`;
+    const existingComment = listIssues.data.find((comment) => comment.body && comment.body.includes(commentIdentifier));
 
     logger.debug("Matched issues", { matchResultArray, length: matchResultArray.size });
 
@@ -159,7 +160,7 @@ export async function issueMatching(context: Context<"issues.opened" | "issues.e
     const numToShow = context.config.alwaysRecommend || 3;
     const limitedContributors = new Map(sortedContributors.slice(0, numToShow).map(({ login, matches }) => [login, matches]));
 
-    const comment = commentBuilder(limitedContributors);
+    const comment = commentBuilder(limitedContributors, issue.node_id);
 
     logger.debug("Comment to be added", { comment });
 
@@ -186,10 +187,11 @@ export async function issueMatching(context: Context<"issues.opened" | "issues.e
 /**
  * Builds the comment to be added to the issue
  * @param matchResultArray The array of issues to be matched
+ * @param issueId The node ID of the current issue
  * @returns The comment to be added to the issue
  */
-function commentBuilder(matchResultArray: Map<string, Array<string>>): string {
-  const commentLines: string[] = [">[!NOTE]", ">The following contributors may be suitable for this task:"];
+function commentBuilder(matchResultArray: Map<string, Array<string>>, issueId: string): string {
+  const commentLines: string[] = [`<!--issue-matching-${issueId}-->`, ">[!NOTE]", ">The following contributors may be suitable for this task:"];
   matchResultArray.forEach((issues: Array<string>, assignee: string) => {
     commentLines.push(`>### [${assignee}](https://www.github.com/${assignee})`);
     issues.forEach((issue: string) => {
