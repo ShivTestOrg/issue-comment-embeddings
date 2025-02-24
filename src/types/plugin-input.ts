@@ -15,6 +15,9 @@ export const pluginSettingsSchema = T.Object(
     alwaysRecommend: T.Optional(
       T.Number({ default: 0, description: "If set to a value greater than 0, the bot will always recommend contributors, regardless of the similarity score." })
     ),
+    enableRedaction: T.Optional(
+      T.Boolean({ default: true, description: "If set to false, private content will not be redacted" })
+    ),
   },
   { default: {} }
 );
