@@ -19,7 +19,9 @@ export async function addIssue(context: Context<"issues.opened">) {
       return;
     }
     const cleanedIssue = removeFootnotes(markdown);
-    await supabase.issue.createIssue({ id, payload, isPrivate, markdown: cleanedIssue, author_id: authorId });
+    const shouldRedact = context.settings.enableRedaction ?? true;
+    const effectiveIsPrivate = shouldRedact && isPrivate;
+    await supabase.issue.createIssue({ id, payload, isPrivate: effectiveIsPrivate, markdown: cleanedIssue, author_id: authorId });
     logger.ok(`Successfully created issue!`, issue);
   } catch (error) {
     if (error instanceof Error) {
