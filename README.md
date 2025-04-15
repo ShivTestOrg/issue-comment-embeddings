@@ -143,6 +143,7 @@ async findSimilarIssues({ markdown, currentId, threshold }: FindSimilarIssuesPar
 ```
 
 This allows the system to:
+
 - Detect duplicate issues automatically
 - Find related issues based on content similarity
 - Maintain a clean issue tracker by preventing redundancy
@@ -158,16 +159,16 @@ if (isPrivate) {
   plaintext = null;
 }
 
-const { data, error } = await this.supabase
-  .from("issues")
-  .insert([{ 
-    id: issueData.id, 
-    plaintext, 
-    embedding, 
-    payload: finalPayload, 
-    author_id: issueData.author_id, 
-    markdown: finalMarkdown 
-  }]);
+const { data, error } = await this.supabase.from("issues").insert([
+  {
+    id: issueData.id,
+    plaintext,
+    embedding,
+    payload: finalPayload,
+    author_id: issueData.author_id,
+    markdown: finalMarkdown,
+  },
+]);
 ```
 
 This ensures that private issues are handled appropriately while still maintaining the vector embedding functionality.
